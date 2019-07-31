@@ -109,4 +109,8 @@ object Utils {
 
     fun pxToDp(px: Int) = (px / Resources.getSystem().displayMetrics.density).toInt()
 
+    fun isRepositoryValid(repository: String): Boolean {
+        val regex = Regex("^(?:https://)?(?:www.)?(?:github.com/)(?!${ignored.joinToString("|")})\\w+$")
+        return repository.isEmpty() || regex.matches(repository)
+    }
 }
