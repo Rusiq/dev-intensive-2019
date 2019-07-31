@@ -1,12 +1,12 @@
 package ru.skillbranch.devintensive.models
 
-class UserView (
+class UserView(
     val id: String,
     val fullName: String,
-    val nickName: String,
-    var avatar : String? = null,
-    var status : String? = "offline",
-    val initials : String?
+    var nickName: String,
+    var avatar: String? = null,
+    var status: String = "offline",
+    val initials: String?
 ) {
     fun printMe() {
         println("""
@@ -16,6 +16,7 @@ class UserView (
             avatar: $avatar
             status: $status
             initials: $initials
-        """.trimIndent())
+        """.trimIndent()
+        )
     }
 }

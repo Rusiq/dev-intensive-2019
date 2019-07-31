@@ -7,7 +7,7 @@ apply plugin: 'kotlin-android-extensions'
 android {
     compileSdkVersion 28
     defaultConfig {
-        applicationId "ru.skillbranch.devintensive"
+        applicationId "ru.skillbranch.dev_intensive"
         minSdkVersion 23
         targetSdkVersion 28
         versionCode 1

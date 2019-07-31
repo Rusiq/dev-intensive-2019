@@ -1,65 +1,40 @@
 package ru.skillbranch.devintensive.models
 
-class Bender(var status: Status = Status.NORMAL, var question: Question = Question.NAME) {
-
-    private val MAX_COUNT_QUESTION_ERR = 2
-    private var currentCountErr = 0
+class Bender(
+    var status : Status = Status.NORMAL,
+    var question: Question = Question.NAME) {
 
     fun askQuestion(): String = when (question) {
         Question.NAME -> Question.NAME.question
-
         Question.PROFESSION -> Question.PROFESSION.question
-
         Question.MATERIAL -> Question.MATERIAL.question
-
         Question.BDAY -> Question.BDAY.question
-
         Question.SERIAL -> Question.SERIAL.question
-
         Question.IDLE -> Question.IDLE.question
-
     }
 
-    private fun setDefaultConfig() {
-        status = Status.NORMAL
-        question = Question.NAME
-    }
+    fun listenAnswer(answer: String): Pair<String, Triple<Int, Int, Int>> =
+        "${checkAnswer(answer)}${question.question}" to status.color
 
-    fun validation(answer: String): String {
-        val trimmed = answer.trim()
-
-        return when (question) {
-            Question.NAME -> if (trimmed[0].isLowerCase()) "Имя должно начинаться с заглавной буквы\n${Question.NAME.question}" else ""
-            Question.PROFESSION -> if (trimmed[0].isUpperCase()) "Профессия должна начинаться со строчной буквы\n${Question.PROFESSION.question}" else ""
-            Question.MATERIAL -> if (!"^[a-zA-Zа-яА-Я]+".toRegex().matches(trimmed)) "Материал не должен содержать цифр\n${Question.MATERIAL.question}" else ""
-            Question.BDAY -> if (!"^[0-9]+".toRegex().matches(trimmed)) "Год моего рождения должен содержать только цифры\n${Question.BDAY.question}" else ""
-            Question.SERIAL -> if (!"^[0-9]{7}+".toRegex().matches(trimmed)) "Серийный номер содержит только цифры, и их 7\n${Question.SERIAL.question}" else ""
-            else -> ""
-        }
-    }
-
-    fun listenAnswer(answer: String): Pair<String, Triple<Int, Int, Int>> {
-        if (question == Question.IDLE) {
-            return "Отлично - ты справился\n${question.question}" to status.color
-        }
-
-        return if (question.answer.contains(answer)) {
-            question = question.nextQuestion()
-
-            "Отлично - ты справился\n${question.question}" to status.color
-        } else {
-            return if (currentCountErr == MAX_COUNT_QUESTION_ERR) {
-                currentCountErr = 0
-                setDefaultConfig()
-
-                "Это неправильный ответ. Давай все по новой\n${question.question}" to status.color
-            } else {
-                currentCountErr++
+    private fun checkAnswer(answer: String): String {
+        val (isValidate, message) = question.validate(answer)
+        return if (isValidate) {
+            if (question.answers.contains(answer.toLowerCase())) {
+                question = question.nextQuestion()
+                "Отлично - ты справился\n"
+            }
+            else {
                 status = status.nextStatus()
-
-                "Это неправильный ответ\n${question.question}" to status.color
+                if (status != Status.NORMAL)
+                    "Это неправильный ответ\n"
+                else {
+                    question = Question.NAME
+                    "Это неправильный ответ. Давай все по новой\n"
+                }
             }
         }
+        else
+            message
     }
 
     enum class Status(val color: Triple<Int, Int, Int>) {
@@ -69,34 +44,46 @@ class Bender(var status: Status = Status.NORMAL, var question: Question = Questi
         CRITICAL(Triple(255, 0, 0));
 
         fun nextStatus(): Status {
-            return if (this.ordinal < values().lastIndex) {
+            return if (this.ordinal < values().lastIndex)
                 values()[this.ordinal + 1]
-            } else {
+            else {
                 values()[0]
             }
         }
     }
 
-    enum class Question(val question: String, val answer: List<String>) {
+    enum class Question(val question: String, val answers: List<String>) {
         NAME("Как меня зовут?", listOf("бендер", "bender")) {
             override fun nextQuestion(): Question = PROFESSION
+            override fun validate(answer: String): Pair<Boolean, String> =
+                (answer.trim().firstOrNull()?.isUpperCase() ?: false) to "Имя должно начинаться с заглавной буквы\n"
         },
         PROFESSION("Назови мою профессию?", listOf("сгибальщик", "bender")) {
             override fun nextQuestion(): Question = MATERIAL
+            override fun validate(answer: String): Pair<Boolean, String> =
+                (answer.trim().firstOrNull()?.isLowerCase() ?: false) to "Профессия должна начинаться со строчной буквы\n"
         },
         MATERIAL("Из чего я сделан?", listOf("металл", "дерево", "metal", "iron", "wood")) {
             override fun nextQuestion(): Question = BDAY
+            override fun validate(answer: String): Pair<Boolean, String> =
+                answer.trim().contains("\\d".toRegex()).not() to "Материал не должен содержать цифр\n"
         },
         BDAY("Когда меня создали?", listOf("2993")) {
             override fun nextQuestion(): Question = SERIAL
+            override fun validate(answer: String): Pair<Boolean, String> =
+                answer.trim().contains("[^\\d]".toRegex()).not() to "Год моего рождения должен содержать только цифры\n"
         },
         SERIAL("Мой серийный номер?", listOf("2716057")) {
             override fun nextQuestion(): Question = IDLE
+            override fun validate(answer: String): Pair<Boolean, String> =
+                Regex("\\d{7}$").matches(answer.trim()) to "Серийный номер содержит только цифры, и их 7\n"
         },
         IDLE("На этом все, вопросов больше нет", listOf()) {
             override fun nextQuestion(): Question = IDLE
+            override fun validate(answer: String): Pair<Boolean, String> = false to ""
         };
 
         abstract fun nextQuestion(): Question
+        abstract fun validate(answer: String): Pair<Boolean, String>
     }
 }

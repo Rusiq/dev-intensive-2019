@@ -18,16 +18,15 @@ import ru.skillbranch.devintensive.models.Profile
 import ru.skillbranch.devintensive.utils.Utils
 import ru.skillbranch.devintensive.viewmodels.ProfileViewModel
 
-class ProfileActivity : AppCompatActivity() {
+class ProfileActivity : AppCompatActivity(){
 
     companion object {
         const val IS_EDIT_MODE = "IS_EDIT_MODE"
     }
 
     private lateinit var viewModel: ProfileViewModel
-
-    private var isEditMode = false
-    private lateinit var viewFields: Map<String, TextView>
+    var isEditMode = false
+    lateinit var viewFields: Map<String, TextView>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setTheme(R.style.AppTheme)
@@ -35,17 +34,6 @@ class ProfileActivity : AppCompatActivity() {
         setContentView(R.layout.activity_profile)
         initViews(savedInstanceState)
         initViewModel()
-    }
-
-    private fun saveProfileInfo() {
-        Profile(
-            firstName = et_first_name.text.toString(),
-            lastName = et_last_name.text.toString(),
-            about = et_about.text.toString(),
-            repository = et_repository.text.toString()
-        ).apply {
-            viewModel.saveProfileData(this)
-        }
     }
 
     private fun initViewModel() {
@@ -60,8 +48,8 @@ class ProfileActivity : AppCompatActivity() {
         wr_repository.error = if (isError) "Невалидный адрес репозитория" else null
     }
 
-    private fun updateTheme(theme: Int) {
-        delegate.setLocalNightMode(theme)
+    private fun updateTheme(mode: Int) {
+        delegate.setLocalNightMode(mode)
     }
 
     private fun updateUI(profile: Profile) {
@@ -70,17 +58,13 @@ class ProfileActivity : AppCompatActivity() {
                 v.text = it[k].toString()
             }
         }
-
         updateAvatar(profile)
     }
 
     private fun updateAvatar(profile: Profile) {
-        val initials = Utils.toInitials(profile.firstName, profile.lastName)
-
-        if (!initials.isNullOrEmpty()) {
-             iv_avatar.setText(initials)
-             iv_avatar.enableAvatarText()
-        }
+        val initials = Utils.toInitials(
+            Utils.transliteration(profile.firstName), Utils.transliteration(profile.lastName))
+        iv_avatar.generateAvatar(initials, Utils.convertSpToPx(48))
     }
 
     private fun initViews(savedInstanceState: Bundle?) {
@@ -92,15 +76,18 @@ class ProfileActivity : AppCompatActivity() {
             "about" to et_about,
             "repository" to et_repository,
             "rating" to tv_rating,
-            "respect" to tv_respect
-        )
+            "respect" to tv_respect)
 
-        isEditMode = savedInstanceState?.getBoolean(IS_EDIT_MODE, false) ?: false
+        isEditMode = savedInstanceState?.getBoolean(IS_EDIT_MODE) ?: false
         showCurrentMode(isEditMode)
 
         btn_edit.setOnClickListener {
+            if (wr_repository.isErrorEnabled) {
+                et_repository.text?.clear()
+                viewModel.setRepositoryState(false)
+            }
             if (isEditMode) saveProfileInfo()
-            isEditMode = !isEditMode
+            isEditMode = isEditMode.not()
             showCurrentMode(isEditMode)
         }
 
@@ -117,11 +104,14 @@ class ProfileActivity : AppCompatActivity() {
         })
     }
 
-    private fun showCurrentMode(isEdit: Boolean) {
-        val info = viewFields.filter { setOf("firstName", "lastName", "about", "repository").contains(it.key) }
 
-        for ((_, v) in info) {
-            v as EditText
+    private fun showCurrentMode(isEdit: Boolean) {
+        val info = viewFields.filter {
+            setOf("firstName", "lastName", "about", "repository" ).contains(it.key)
+        }
+
+        info.forEach {
+            val v = it.value as EditText
             v.isFocusable = isEdit
             v.isFocusableInTouchMode = isEdit
             v.isEnabled = isEdit
@@ -130,27 +120,31 @@ class ProfileActivity : AppCompatActivity() {
 
         ic_eye.visibility = if (isEdit) View.GONE else View.VISIBLE
         wr_about.isCounterEnabled = isEdit
-
-        with(btn_edit) {
-            val filter: ColorFilter? = if (isEdit) {
-                PorterDuffColorFilter(
-                    resources.getColor(R.color.color_accent, theme),
-                    PorterDuff.Mode.SRC_IN
-                )
-            } else {
-                null
+        with(btn_edit){
+            val filter: ColorFilter? = if (isEdit){
+                PorterDuffColorFilter(resources.getColor(R.color.color_accent, theme), PorterDuff.Mode.SRC_IN)
             }
+            else null
 
-            val icon = if (isEdit) {
-                resources.getDrawable(R.drawable.ic_save_black_24dp, theme)
-            } else {
-                resources.getDrawable(R.drawable.ic_edit_black_24dp, theme)
-            }
+            val icon =
+                if (isEdit)
+                    resources.getDrawable(R.drawable.ic_save_black_24dp, theme)
+                else resources.getDrawable(R.drawable.ic_edit_black_24dp, theme)
 
             background.colorFilter = filter
             setImageDrawable(icon)
         }
+    }
 
+    private fun saveProfileInfo(){
+        Profile(
+            firstName = et_first_name.text.toString(),
+            lastName = et_last_name.text.toString(),
+            about = et_about.text.toString(),
+            repository = et_repository.text.toString()
+        ).apply {
+            viewModel.saveProfileData(this)
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
