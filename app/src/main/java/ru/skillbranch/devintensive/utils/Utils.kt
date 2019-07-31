@@ -8,6 +8,10 @@ import java.util.*
 
 object Utils {
 
+    private val ignored = setOf("enterprise", "features", "topics",
+            "collections", "trending", "events", "marketplace", "pricing", "nonprofit",
+            "customer-stories", "security", "login", "join")
+
     fun parseFullName(fullName: String?): Pair<String?, String?> {
         val parts: List<String>? = fullName?.trim()?.split(" ")
 
