@@ -208,3 +208,4 @@ private fun isSpecialDiapason(days: Long): Boolean {
     val newSymbol = "$firstSymbol$secondSymbol".toInt()
     return (newSymbol.coerceIn(10, 20) == newSymbol)
 }
+

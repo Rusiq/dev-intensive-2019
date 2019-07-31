@@ -10,10 +10,9 @@ data class User(
     var avatar: String?,
     var rating: Int = 0,
     var respect: Int = 0,
-    var lastVisit: Date? = Date(),
+    val lastVisit: Date? = Date(),
     var isOnline: Boolean = false
 ) {
-
     constructor(id: String, firstName: String?, lastName: String?) : this(
         id = id,
         firstName = firstName,
@@ -21,7 +20,7 @@ data class User(
         avatar = null
     )
 
-    constructor(id: String):this(id, "John", "Doe")
+    constructor(id: String) : this(id, "John", "Doe")
 
     private constructor(builder: Builder) : this(
         builder.id,
@@ -78,22 +77,29 @@ data class User(
         fun build() = User(this)
     }
 
-    init {
-        println("It's Alive!!! $firstName - $lastName")
-    }
+    fun printMe() = println(
+        """
+            id: $id
+            firstName: $firstName
+            lastName: $lastName
+            avatar: $avatar
+            rating: $rating
+            respect: $respect
+            lastVisit: $lastVisit
+            isOnline: $isOnline
+        """.trimIndent()
+    )
 
     companion object Factory {
         private var lastId: Int = -1
+
         fun makeUser(fullName: String?): User {
             lastId++
 
-
             val (firstName, lastName) = Utils.parseFullName(fullName)
 
-            return User(id = "$lastName", firstName = firstName, lastName = lastName)
+            return User(id = "$lastId", firstName = firstName, lastName = lastName)
         }
     }
 
-
 }
-

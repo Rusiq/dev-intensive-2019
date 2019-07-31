@@ -1,29 +1,24 @@
 package ru.skillbranch.devintensive.utils
 
+import android.content.res.Resources
+import androidx.annotation.Px
 import ru.skillbranch.devintensive.extensions.format
+import ru.skillbranch.devintensive.extensions.humanizeDiff
 import java.util.*
 
 object Utils {
+
     fun parseFullName(fullName: String?): Pair<String?, String?> {
+        val parts: List<String>? = fullName?.trim()?.split(" ")
 
-        if (fullName?.trim().isNullOrEmpty())
-            return null to null
-
-        val parts: List<String>? = fullName?.split(" ")
         val firstName = parts?.getOrNull(0)
         val lastName = parts?.getOrNull(1)
-        return firstName to lastName
-    }
 
-    fun toInitials(firstName: String?, lastName:String?):String?{
-
-        if (firstName?.trim().isNullOrEmpty() && lastName?.trim().isNullOrEmpty())
-            return null
-
-        val firstInitial = firstName?.trim()?.getOrNull(0)?.toUpperCase()
-        val secondInitial = lastName?.trim()?.getOrNull(0)?.toUpperCase()
-
-        return "${firstInitial?:""}${secondInitial?:""}"
+        return when {
+            firstName == "" -> Pair(null, lastName)
+            lastName == "" -> Pair(firstName, null)
+            else -> Pair(firstName, lastName)
+        }
     }
 
     fun transliteration(source: String, divider: String = " "): String {
@@ -88,7 +83,30 @@ object Utils {
         }
     }
 
-    fun getDifferNumberDate(currentDate: Date, date: Date, pattern: String) : Int {
+
+    fun toInitials(firstName: String?, lastName: String?): String? {
+        val copyFirstName = firstName?.trim()
+        val copyLastName = lastName?.trim()
+
+        if (copyFirstName.isNullOrEmpty() && copyLastName.isNullOrEmpty()) {
+            return null
+        }
+
+        return when {
+            copyFirstName.isNullOrEmpty() -> copyLastName?.get(0).toString().toUpperCase()
+            copyLastName.isNullOrEmpty() -> copyFirstName?.get(0).toString().toUpperCase()
+            else -> "${copyFirstName[0].toUpperCase()}${copyLastName[0].toUpperCase()}"
+        }
+    }
+
+    fun getDifferNumberDate(currentDate: Date, date: Date, pattern: String): Int {
         return currentDate.format(pattern).toInt() - date.format(pattern).toInt()
     }
+
+    fun dpToPx(dp: Int) = (dp * Resources.getSystem().displayMetrics.density).toInt()
+
+    fun spToPx(sp: Int) = (sp * Resources.getSystem().displayMetrics.scaledDensity).toInt()
+
+    fun pxToDp(px: Int) = (px / Resources.getSystem().displayMetrics.density).toInt()
+
 }

@@ -11,5 +11,7 @@ fun String.truncate(value: Int = 16): String {
 }
 
 fun String.stripHtml(): String = this
-    .replace("<[^>]*>".toRegex(), "")
-    .replace("[ ]+".toRegex(), " ")
+    .replace("<[^>]*>".toRegex(),"")
+    .replace("[ ]+".toRegex()," ")
+
+
