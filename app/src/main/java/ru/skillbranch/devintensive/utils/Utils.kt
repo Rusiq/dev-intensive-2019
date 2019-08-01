@@ -80,7 +80,8 @@ object Utils {
     }
 
     fun isRepositoryValid(repository: String): Boolean {
-        val regex = Regex("^(?:https://)?(?:www.)?(?:github.com/)(?!${ignored.joinToString("|")})\\w+$")
+        val regex = Regex("^(?:https://)?(?:www.)?(?:github.com/)(?!${ignored.joinToString("|")})[A-z0-9_-]+\\/?")
+//        val regex = Regex("http(s)?:\\/\\/(www\\.)?github\\.com\\/(?!${ignored.joinToString("|")})[A-z0-9_-]+\\/?")
         return repository.isEmpty() || regex.matches(repository)
     }
 
